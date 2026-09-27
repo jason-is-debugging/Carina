@@ -1,17 +1,81 @@
 [project]
 name = "carina"
 version = "0.1.0"
-description = "Add your description here"
+description = "A small, fully-typed virtual-companion language model (Carina)."
 readme = "README.md"
 authors = [
-    { name = "Jason Shen", email = "jason.shen.gm@gmail.com" }
+    { name = "Jason Shen", email = "jason.shen.gm@gmail.com" },
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "torch>=2.0",
+    "transformers>=4.40",
+    "tokenizers>=0.19",
+    "numpy",
+    "tqdm",
+    "wandb",
+    "gradio>=4.0",
+    "pytest>=7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6",
+]
 
 [project.scripts]
-carina = "carina:main"
+carina-train-sft = "scripts.train_sft:main"
+carina-generate = "scripts.generate:main"
+carina-web-demo = "scripts.web_demo:main"
+carina-train-tokenizer = "scripts.train_tokenizer:main"
+carina-check-style = "scripts.check_style:main"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv]
+package = true
+
+[tool.uv.build-backend]
+module-name = "carina"
+module-root = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "BLE", "PL", "RUF"]
+ignore = [
+    "PLR0913",  # too-many-arguments (Carina API surface is parameter-rich by design)
+    "PLR0917",  # too-many-positional-arguments (Carina API surface is parameter-rich by design)
+    "PLR2004",  # magic values are intentional in trainer code
+    "PLR0912",  # too-many-branches (epoch loop is intentionally centralised)
+    "PLR0915",  # too-many-statements (per-step helpers cover the surface)
+    "PLW2901",  # redefined-loop-name (reused `line` is intentional in JSONL reads)
+    "E501",     # handled by line-length above
+    "UP007",    # X | Y unions are fine in modern Python
+    "UP045",    # builtin generics vs X | Y, style choice
+    "DTZ005",   # local time is fine for log filenames
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["T201", "S311", "RUF003", "PLC0415"]  # prints and lazy imports are fine in CLI scripts
+"tests/*" = ["S101", "E741"]              # asserts are the point of pytest
+"src/carina/train/logging.py" = ["S110"]  # silent fallback for wandb is intentional
+"src/carina/train/*" = ["N803", "N806", "PLC0415", "RUF005", "RUF021"]   # argument casing, lazy imports
+"src/carina/model/*" = ["N812"]           # `F = torch.nn.functional` is conventional
+"src/carina/inference/*" = ["PLC0415", "RUF005"]  # lazy imports for optional deps
+"src/carina/tokenizer.py" = ["PLC0415"]   # lazy tempfile import
+"src/carina/config.py" = ["E741", "RUF002", "RUF003"]  # en-dash range in docstrings
+"configs/*.py" = ["PLC0415", "RUF002", "RUF003"]      # en-dash range in docstrings; lazy torch in resolve_device
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
