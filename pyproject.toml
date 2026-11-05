@@ -1,0 +1,35 @@
+[project]
+name = "carina"
+version = "0.1.0"
+description = "Decoder 循环复用架构对照实验：3 种训练范式 × 2 种权重实现 + 深度锚点，共 8 组 Benchmark"
+readme = "README.md"
+authors = [
+    { name = "Jason Shen", email = "jason.shen.gm@gmail.com" }
+]
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "torch==2.5.1",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "datasets>=5.1.0",
+    "transformers>=4.40",
+    "modelscope>=1.40.2",
+    "streamlit>=1.66.1",
+]
+
+[project.scripts]
+carina = "carina:main"
+
+# PyTorch 走官方 CUDA 轮子索引（显式），其余依赖走默认 PyPI。
+# 注意：不可把该索引设为 default = true，否则会屏蔽 PyPI 导致 numpy/matplotlib 无法解析。
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
